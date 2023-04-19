@@ -203,6 +203,7 @@ OpDecorate %278 Location 0
 %304 = OpConstantNull  %12
 %305 = OpConstantNull  %6
 %306 = OpConstant  %4  0.0
+%307 = OpConstantComposite  %6  %306 %306 %306 %306
 %60 = OpFunction  %6  None %61
 %58 = OpFunctionParameter  %5
 %59 = OpFunctionParameter  %5
@@ -458,20 +459,19 @@ OpFunctionEnd
 %288 = OpLoad  %18  %51
 %289 = OpLoad  %19  %53
 %290 = OpLoad  %20  %55
-OpBranch %307
-%307 = OpLabel
-%308 = OpFunctionCall  %6  %60 %21 %21
-%309 = OpFunctionCall  %6  %74 %291 %21
-%310 = OpFunctionCall  %6  %90 %292 %293 %21
-%311 = OpFunctionCall  %6  %108 %294 %21 %21
-%312 = OpFunctionCall  %6  %124 %295 %21
-%313 = OpFunctionCall  %6  %139 %296 %21
-%314 = OpFunctionCall  %2  %221 %21 %297
-%315 = OpFunctionCall  %2  %231 %298 %299
-%316 = OpFunctionCall  %2  %243 %300 %293 %301
-%317 = OpFunctionCall  %2  %257 %302 %21 %303
-%318 = OpFunctionCall  %2  %269 %304 %305
-%319 = OpCompositeConstruct  %6  %306 %306 %306 %306
-OpStore %278 %319
+OpBranch %308
+%308 = OpLabel
+%309 = OpFunctionCall  %6  %60 %21 %21
+%310 = OpFunctionCall  %6  %74 %291 %21
+%311 = OpFunctionCall  %6  %90 %292 %293 %21
+%312 = OpFunctionCall  %6  %108 %294 %21 %21
+%313 = OpFunctionCall  %6  %124 %295 %21
+%314 = OpFunctionCall  %6  %139 %296 %21
+%315 = OpFunctionCall  %2  %221 %21 %297
+%316 = OpFunctionCall  %2  %231 %298 %299
+%317 = OpFunctionCall  %2  %243 %300 %293 %301
+%318 = OpFunctionCall  %2  %257 %302 %21 %303
+%319 = OpFunctionCall  %2  %269 %304 %305
+OpStore %278 %307
 OpReturn
 OpFunctionEnd

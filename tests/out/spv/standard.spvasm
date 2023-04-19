@@ -6,55 +6,55 @@ OpCapability Shader
 OpCapability DerivativeControl
 %1 = OpExtInstImport "GLSL.std.450"
 OpMemoryModel Logical GLSL450
-OpEntryPoint Fragment %20 "derivatives" %15 %18
-OpExecutionMode %20 OriginUpperLeft
-OpDecorate %15 BuiltIn FragCoord
-OpDecorate %18 Location 0
+OpEntryPoint Fragment %13 "derivatives" %8 %11
+OpExecutionMode %13 OriginUpperLeft
+OpDecorate %8 BuiltIn FragCoord
+OpDecorate %11 Location 0
 %2 = OpTypeVoid
 %4 = OpTypeFloat 32
 %3 = OpTypeVector %4 4
 %6 = OpTypeInt 32 1
 %5 = OpConstant  %6  0
-%8 = OpTypePointer Function %3
-%9 = OpConstantNull  %3
-%11 = OpConstantNull  %3
-%13 = OpConstantNull  %3
-%16 = OpTypePointer Input %3
-%15 = OpVariable  %16  Input
-%19 = OpTypePointer Output %3
-%18 = OpVariable  %19  Output
-%21 = OpTypeFunction %2
-%20 = OpFunction  %2  None %21
-%14 = OpLabel
-%7 = OpVariable  %8  Function %9
-%10 = OpVariable  %8  Function %11
-%12 = OpVariable  %8  Function %13
-%17 = OpLoad  %3  %15
+%9 = OpTypePointer Input %3
+%8 = OpVariable  %9  Input
+%12 = OpTypePointer Output %3
+%11 = OpVariable  %12  Output
+%14 = OpTypeFunction %2
+%16 = OpTypePointer Function %3
+%17 = OpConstantNull  %3
+%19 = OpConstantNull  %3
+%21 = OpConstantNull  %3
+%13 = OpFunction  %2  None %14
+%7 = OpLabel
+%15 = OpVariable  %16  Function %17
+%18 = OpVariable  %16  Function %19
+%20 = OpVariable  %16  Function %21
+%10 = OpLoad  %3  %8
 OpBranch %22
 %22 = OpLabel
-%23 = OpDPdxCoarse  %3  %17
-OpStore %7 %23
-%24 = OpDPdyCoarse  %3  %17
-OpStore %10 %24
-%25 = OpFwidthCoarse  %3  %17
-OpStore %12 %25
-%26 = OpDPdxFine  %3  %17
-OpStore %7 %26
-%27 = OpDPdyFine  %3  %17
-OpStore %10 %27
-%28 = OpFwidthFine  %3  %17
-OpStore %12 %28
-%29 = OpDPdx  %3  %17
-OpStore %7 %29
-%30 = OpDPdy  %3  %17
-OpStore %10 %30
-%31 = OpFwidth  %3  %17
-OpStore %12 %31
-%32 = OpLoad  %3  %7
-%33 = OpLoad  %3  %10
+%23 = OpDPdxCoarse  %3  %10
+OpStore %15 %23
+%24 = OpDPdyCoarse  %3  %10
+OpStore %18 %24
+%25 = OpFwidthCoarse  %3  %10
+OpStore %20 %25
+%26 = OpDPdxFine  %3  %10
+OpStore %15 %26
+%27 = OpDPdyFine  %3  %10
+OpStore %18 %27
+%28 = OpFwidthFine  %3  %10
+OpStore %20 %28
+%29 = OpDPdx  %3  %10
+OpStore %15 %29
+%30 = OpDPdy  %3  %10
+OpStore %18 %30
+%31 = OpFwidth  %3  %10
+OpStore %20 %31
+%32 = OpLoad  %3  %15
+%33 = OpLoad  %3  %18
 %34 = OpFAdd  %3  %32 %33
-%35 = OpLoad  %3  %12
+%35 = OpLoad  %3  %20
 %36 = OpFMul  %3  %34 %35
-OpStore %18 %36
+OpStore %11 %36
 OpReturn
 OpFunctionEnd
