@@ -121,25 +121,27 @@ enum Rule {
 }
 
 #[derive(Default)]
-struct BindingParser {
-    location: Option<u32>,
+struct BindingParser<'a> {
+    location: Option<Handle<ast::Expression<'a>>>,
     built_in: Option<crate::BuiltIn>,
     interpolation: Option<crate::Interpolation>,
     sampling: Option<crate::Sampling>,
     invariant: bool,
 }
 
-impl BindingParser {
-    fn parse<'a>(
+impl<'a> BindingParser<'a> {
+    fn parse(
         &mut self,
+        parser: &mut Parser,
         lexer: &mut Lexer<'a>,
         name: &'a str,
         name_span: Span,
+        mut ctx: ExpressionContext<'a, '_, '_>,
     ) -> Result<(), Error<'a>> {
         match name {
             "location" => {
                 lexer.expect(Token::Paren('('))?;
-                self.location = Some(Parser::non_negative_i32_literal(lexer)?);
+                self.location = Some(parser.general_expression(lexer, ctx.reborrow())?);
                 lexer.expect(Token::Paren(')'))?;
             }
             "builtin" => {
@@ -164,7 +166,7 @@ impl BindingParser {
         Ok(())
     }
 
-    const fn finish<'a>(self, span: Span) -> Result<Option<crate::Binding>, Error<'a>> {
+    const fn finish(self, span: Span) -> Result<Option<ast::Binding<'a>>, Error<'a>> {
         match (
             self.location,
             self.built_in,
@@ -178,20 +180,18 @@ impl BindingParser {
                 // `apply_default_interpolation` to ensure that the interpolation and
                 // sampling have been explicitly specified on all vertex shader output and fragment
                 // shader input user bindings, so leaving them potentially `None` here is fine.
-                Ok(Some(crate::Binding::Location {
+                Ok(Some(ast::Binding::Location {
                     location,
                     interpolation,
                     sampling,
                 }))
             }
             (None, Some(crate::BuiltIn::Position { .. }), None, None, invariant) => {
-                Ok(Some(crate::Binding::BuiltIn(crate::BuiltIn::Position {
+                Ok(Some(ast::Binding::BuiltIn(crate::BuiltIn::Position {
                     invariant,
                 })))
             }
-            (None, Some(built_in), None, None, false) => {
-                Ok(Some(crate::Binding::BuiltIn(built_in)))
-            }
+            (None, Some(built_in), None, None, false) => Ok(Some(ast::Binding::BuiltIn(built_in))),
             (_, _, _, _, _) => Err(Error::InconsistentBinding(span)),
         }
     }
@@ -224,41 +224,18 @@ impl Parser {
         lexer.span_from(initial)
     }
 
-    fn switch_value<'a>(lexer: &mut Lexer<'a>) -> Result<(ast::SwitchValue, Span), Error<'a>> {
-        let token_span = lexer.next();
-        match token_span.0 {
-            Token::Word("default") => Ok((ast::SwitchValue::Default, token_span.1)),
-            Token::Number(Ok(Number::U32(num))) => Ok((ast::SwitchValue::U32(num), token_span.1)),
-            Token::Number(Ok(Number::I32(num))) => Ok((ast::SwitchValue::I32(num), token_span.1)),
-            Token::Number(Err(e)) => Err(Error::BadNumber(token_span.1, e)),
-            _ => Err(Error::Unexpected(token_span.1, ExpectedToken::Integer)),
+    fn switch_value<'a>(
+        &mut self,
+        lexer: &mut Lexer<'a>,
+        mut ctx: ExpressionContext<'a, '_, '_>,
+    ) -> Result<ast::SwitchValue<'a>, Error<'a>> {
+        if let Token::Word("default") = lexer.peek().0 {
+            let _ = lexer.next();
+            return Ok(ast::SwitchValue::Default);
         }
-    }
 
-    /// Parse a non-negative signed integer literal.
-    /// This is for attributes like `size`, `location` and others.
-    fn non_negative_i32_literal<'a>(lexer: &mut Lexer<'a>) -> Result<u32, Error<'a>> {
-        match lexer.next() {
-            (Token::Number(Ok(Number::I32(num))), span) => {
-                u32::try_from(num).map_err(|_| Error::NegativeInt(span))
-            }
-            (Token::Number(Err(e)), span) => Err(Error::BadNumber(span, e)),
-            other => Err(Error::Unexpected(other.1, ExpectedToken::Number)),
-        }
-    }
-
-    /// Parse a non-negative integer literal that may be either signed or unsigned.
-    /// This is for the `workgroup_size` attribute and array lengths.
-    /// Note: these values should be no larger than [`i32::MAX`], but this is not checked here.
-    fn generic_non_negative_int_literal<'a>(lexer: &mut Lexer<'a>) -> Result<u32, Error<'a>> {
-        match lexer.next() {
-            (Token::Number(Ok(Number::I32(num))), span) => {
-                u32::try_from(num).map_err(|_| Error::NegativeInt(span))
-            }
-            (Token::Number(Ok(Number::U32(num))), _) => Ok(num),
-            (Token::Number(Err(e)), span) => Err(Error::BadNumber(span, e)),
-            other => Err(Error::Unexpected(other.1, ExpectedToken::Number)),
-        }
+        let expr = self.general_expression(lexer, ctx.reborrow())?;
+        Ok(ast::SwitchValue::Expr(expr))
     }
 
     /// Decide if we're looking at a construction expression, and return its
@@ -997,17 +974,19 @@ impl Parser {
                 match lexer.next_ident_with_span()? {
                     ("size", _) => {
                         lexer.expect(Token::Paren('('))?;
-                        let (value, span) = lexer.capture_span(Self::non_negative_i32_literal)?;
+                        let expr = self.general_expression(lexer, ctx.reborrow())?;
                         lexer.expect(Token::Paren(')'))?;
-                        size = Some((value, span));
+                        size = Some(expr);
                     }
                     ("align", _) => {
                         lexer.expect(Token::Paren('('))?;
-                        let (value, span) = lexer.capture_span(Self::non_negative_i32_literal)?;
+                        let expr = self.general_expression(lexer, ctx.reborrow())?;
                         lexer.expect(Token::Paren(')'))?;
-                        align = Some((value, span));
+                        align = Some(expr);
                     }
-                    (word, word_span) => bind_parser.parse(lexer, word, word_span)?,
+                    (word, word_span) => {
+                        bind_parser.parse(self, lexer, word, word_span, ctx.reborrow())?
+                    }
                 }
             }
 
@@ -1734,19 +1713,18 @@ impl Parser {
                             match lexer.next() {
                                 (Token::Word("case"), _) => {
                                     // parse a list of values
-                                    let (value, value_span) = loop {
-                                        let (value, value_span) = Self::switch_value(lexer)?;
+                                    let value = loop {
+                                        let value = self.switch_value(lexer, ctx.reborrow())?;
                                         if lexer.skip(Token::Separator(',')) {
                                             if lexer.skip(Token::Separator(':')) {
-                                                break (value, value_span);
+                                                break value;
                                             }
                                         } else {
                                             lexer.skip(Token::Separator(':'));
-                                            break (value, value_span);
+                                            break value;
                                         }
                                         cases.push(ast::SwitchCase {
                                             value,
-                                            value_span,
                                             body: ast::Block::default(),
                                             fall_through: true,
                                         });
@@ -1756,17 +1734,15 @@ impl Parser {
 
                                     cases.push(ast::SwitchCase {
                                         value,
-                                        value_span,
                                         body,
                                         fall_through: false,
                                     });
                                 }
-                                (Token::Word("default"), value_span) => {
+                                (Token::Word("default"), _) => {
                                     lexer.skip(Token::Separator(':'));
                                     let body = self.block(lexer, ctx.reborrow())?.0;
                                     cases.push(ast::SwitchCase {
                                         value: ast::SwitchValue::Default,
-                                        value_span,
                                         body,
                                         fall_through: false,
                                     });
@@ -2028,13 +2004,14 @@ impl Parser {
     fn varying_binding<'a>(
         &mut self,
         lexer: &mut Lexer<'a>,
-    ) -> Result<Option<crate::Binding>, Error<'a>> {
+        mut ctx: ExpressionContext<'a, '_, '_>,
+    ) -> Result<Option<ast::Binding<'a>>, Error<'a>> {
         let mut bind_parser = BindingParser::default();
         self.push_rule_span(Rule::Attribute, lexer);
 
         while lexer.skip(Token::Attribute) {
             let (word, span) = lexer.next_ident_with_span()?;
-            bind_parser.parse(lexer, word, span)?;
+            bind_parser.parse(self, lexer, word, span, ctx.reborrow())?;
         }
 
         let span = self.pop_rule_span(lexer);
@@ -2075,7 +2052,7 @@ impl Parser {
                     ExpectedToken::Token(Token::Separator(',')),
                 ));
             }
-            let binding = self.varying_binding(lexer)?;
+            let binding = self.varying_binding(lexer, ctx.reborrow())?;
 
             let param_name = lexer.next_ident()?;
 
@@ -2093,7 +2070,7 @@ impl Parser {
         }
         // read return type
         let result = if lexer.skip(Token::Arrow) && !lexer.skip(Token::Word("void")) {
-            let binding = self.varying_binding(lexer)?;
+            let binding = self.varying_binding(lexer, ctx.reborrow())?;
             let ty = self.type_decl(lexer, ctx.reborrow())?;
             Some(ast::FunctionResult { ty, binding })
         } else {
@@ -2132,21 +2109,30 @@ impl Parser {
         // read attributes
         let mut binding = None;
         let mut stage = None;
-        let mut workgroup_size = [0u32; 3];
+        let mut workgroup_size = None;
         let mut early_depth_test = None;
         let (mut bind_index, mut bind_group) = (None, None);
+
+        let mut dependencies = FastHashSet::default();
+        let mut ctx = ExpressionContext {
+            expressions: &mut out.expressions,
+            local_table: &mut SymbolTable::default(),
+            locals: &mut Arena::new(),
+            types: &mut out.types,
+            unresolved: &mut dependencies,
+        };
 
         self.push_rule_span(Rule::Attribute, lexer);
         while lexer.skip(Token::Attribute) {
             match lexer.next_ident_with_span()? {
                 ("binding", _) => {
                     lexer.expect(Token::Paren('('))?;
-                    bind_index = Some(Self::non_negative_i32_literal(lexer)?);
+                    bind_index = Some(self.general_expression(lexer, ctx.reborrow())?);
                     lexer.expect(Token::Paren(')'))?;
                 }
                 ("group", _) => {
                     lexer.expect(Token::Paren('('))?;
-                    bind_group = Some(Self::non_negative_i32_literal(lexer)?);
+                    bind_group = Some(self.general_expression(lexer, ctx.reborrow())?);
                     lexer.expect(Token::Paren(')'))?;
                 }
                 ("vertex", _) => {
@@ -2160,9 +2146,9 @@ impl Parser {
                 }
                 ("workgroup_size", _) => {
                     lexer.expect(Token::Paren('('))?;
-                    workgroup_size = [1u32; 3];
-                    for (i, size) in workgroup_size.iter_mut().enumerate() {
-                        *size = Self::generic_non_negative_int_literal(lexer)?;
+                    let mut _workgroup_size = [None; 3];
+                    for (i, size) in _workgroup_size.iter_mut().enumerate() {
+                        *size = Some(self.general_expression(lexer, ctx.reborrow())?);
                         match lexer.next() {
                             (Token::Paren(')'), _) => break,
                             (Token::Separator(','), _) if i != 2 => (),
@@ -2174,6 +2160,7 @@ impl Parser {
                             }
                         }
                     }
+                    workgroup_size = Some(_workgroup_size);
                 }
                 ("early_depth_test", _) => {
                     let conservative = if lexer.skip(Token::Paren('(')) {
@@ -2193,7 +2180,7 @@ impl Parser {
         let attrib_span = self.pop_rule_span(lexer);
         match (bind_group, bind_index) {
             (Some(group), Some(index)) => {
-                binding = Some(crate::ResourceBinding {
+                binding = Some(ast::ResourceBinding {
                     group,
                     binding: index,
                 });
@@ -2202,15 +2189,6 @@ impl Parser {
             (None, Some(_)) => return Err(Error::MissingAttribute("group", attrib_span)),
             (None, None) => {}
         }
-
-        let mut dependencies = FastHashSet::default();
-        let mut ctx = ExpressionContext {
-            expressions: &mut out.expressions,
-            local_table: &mut SymbolTable::default(),
-            locals: &mut Arena::new(),
-            types: &mut out.types,
-            unresolved: &mut dependencies,
-        };
 
         // read item
         let start = lexer.start_byte_offset();

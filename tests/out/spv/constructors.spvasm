@@ -1,7 +1,7 @@
 ; SPIR-V
 ; Version: 1.1
 ; Generator: rspirv
-; Bound: 90
+; Bound: 85
 OpCapability Shader
 %1 = OpExtInstImport "GLSL.std.450"
 OpMemoryModel Logical GLSL450
@@ -66,35 +66,34 @@ OpDecorate %17 ArrayStride 4
 %56 = OpConstantNull  %6
 %57 = OpConstant  %12  0
 %58 = OpConstantNull  %13
-%59 = OpConstantNull  %5
-%60 = OpConstantNull  %12
-%61 = OpConstantNull  %4
-%62 = OpConstantNull  %14
-%63 = OpConstantNull  %20
-%64 = OpConstantNull  %14
-%65 = OpConstantNull  %20
+%59 = OpConstantNull  %14
+%60 = OpConstantNull  %20
 %47 = OpFunction  %2  None %48
 %46 = OpLabel
 %43 = OpVariable  %44  Function %45
-OpBranch %66
-%66 = OpLabel
-%67 = OpCompositeConstruct  %3  %22 %22 %22 %22
-%68 = OpCompositeConstruct  %6  %67 %29
-OpStore %43 %68
-%69 = OpCompositeConstruct  %9  %22 %21
-%70 = OpCompositeConstruct  %9  %21 %22
-%71 = OpCompositeConstruct  %8  %69 %70
-%72 = OpCompositeConstruct  %3  %22 %21 %21 %21
-%73 = OpCompositeConstruct  %3  %21 %22 %21 %21
-%74 = OpCompositeConstruct  %3  %21 %21 %22 %21
-%75 = OpCompositeConstruct  %3  %21 %21 %21 %22
-%76 = OpCompositeConstruct  %19  %72 %73 %74 %75
-%77 = OpCompositeConstruct  %14  %57 %57
-%78 = OpCompositeConstruct  %9  %21 %21
-%79 = OpCompositeConstruct  %9  %21 %21
-%80 = OpCompositeConstruct  %8  %78 %79
-%81 = OpCompositeConstruct  %17  %40 %29 %41 %37
-%87 = OpCopyObject  %20  %63
-%89 = OpCopyObject  %20  %65
+OpBranch %61
+%61 = OpLabel
+%62 = OpCompositeConstruct  %3  %22 %22 %22 %22
+%63 = OpCompositeConstruct  %6  %62 %29
+OpStore %43 %63
+%64 = OpCompositeConstruct  %9  %22 %21
+%65 = OpCompositeConstruct  %9  %21 %22
+%66 = OpCompositeConstruct  %8  %64 %65
+%67 = OpCompositeConstruct  %3  %22 %21 %21 %21
+%68 = OpCompositeConstruct  %3  %21 %22 %21 %21
+%69 = OpCompositeConstruct  %3  %21 %21 %22 %21
+%70 = OpCompositeConstruct  %3  %21 %21 %21 %22
+%71 = OpCompositeConstruct  %19  %67 %68 %69 %70
+%72 = OpCompositeConstruct  %14  %57 %57
+%73 = OpCompositeConstruct  %9  %21 %21
+%74 = OpCompositeConstruct  %9  %21 %21
+%75 = OpCompositeConstruct  %8  %73 %74
+%76 = OpCompositeConstruct  %17  %40 %29 %41 %37
+%78 = OpCompositeConstruct  %14  %57 %57
+%79 = OpCompositeConstruct  %7  %21 %21 %21
+%80 = OpCompositeConstruct  %7  %21 %21 %21
+%81 = OpCompositeConstruct  %7  %21 %21 %21
+%82 = OpCompositeConstruct  %20  %80 %81
+%84 = OpCopyObject  %20  %60
 OpReturn
 OpFunctionEnd

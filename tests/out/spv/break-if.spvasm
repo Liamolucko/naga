@@ -1,88 +1,90 @@
 ; SPIR-V
 ; Version: 1.1
 ; Generator: rspirv
-; Bound: 50
+; Bound: 52
 OpCapability Shader
 %1 = OpExtInstImport "GLSL.std.450"
 OpMemoryModel Logical GLSL450
-OpEntryPoint GLCompute %48 "main"
-OpExecutionMode %48 LocalSize 1 1 1
+OpEntryPoint GLCompute %50 "main"
+OpExecutionMode %50 LocalSize 1 1 1
 %2 = OpTypeVoid
 %3 = OpTypeBool
-%6 = OpTypeFunction %2
-%7 = OpConstantTrue  %3
-%14 = OpTypePointer Function %3
-%15 = OpConstantNull  %3
+%5 = OpTypeInt 32 1
+%4 = OpConstant  %5  1
+%8 = OpTypeFunction %2
+%9 = OpConstantTrue  %3
+%16 = OpTypePointer Function %3
 %17 = OpConstantNull  %3
-%21 = OpTypeFunction %2 %3
-%32 = OpConstantNull  %3
+%19 = OpConstantNull  %3
+%23 = OpTypeFunction %2 %3
 %34 = OpConstantNull  %3
-%5 = OpFunction  %2  None %6
-%4 = OpLabel
-OpBranch %8
-%8 = OpLabel
-OpBranch %9
-%9 = OpLabel
-OpLoopMerge %10 %12 None
+%36 = OpConstantNull  %3
+%7 = OpFunction  %2  None %8
+%6 = OpLabel
+OpBranch %10
+%10 = OpLabel
 OpBranch %11
 %11 = OpLabel
-OpBranch %12
+OpLoopMerge %12 %14 None
+OpBranch %13
+%13 = OpLabel
+OpBranch %14
+%14 = OpLabel
+OpBranchConditional %9 %12 %11
 %12 = OpLabel
-OpBranchConditional %7 %10 %9
-%10 = OpLabel
 OpReturn
 OpFunctionEnd
-%20 = OpFunction  %2  None %21
-%19 = OpFunctionParameter  %3
-%18 = OpLabel
-%13 = OpVariable  %14  Function %15
-%16 = OpVariable  %14  Function %17
-OpBranch %22
-%22 = OpLabel
-OpBranch %23
-%23 = OpLabel
-OpLoopMerge %24 %26 None
+%22 = OpFunction  %2  None %23
+%21 = OpFunctionParameter  %3
+%20 = OpLabel
+%15 = OpVariable  %16  Function %17
+%18 = OpVariable  %16  Function %19
+OpBranch %24
+%24 = OpLabel
 OpBranch %25
 %25 = OpLabel
-OpBranch %26
+OpLoopMerge %26 %28 None
+OpBranch %27
+%27 = OpLabel
+OpBranch %28
+%28 = OpLabel
+OpStore %15 %21
+%29 = OpLoad  %3  %15
+%30 = OpLogicalNotEqual  %3  %21 %29
+OpStore %18 %30
+%31 = OpLoad  %3  %18
+%32 = OpLogicalEqual  %3  %21 %31
+OpBranchConditional %32 %26 %25
 %26 = OpLabel
-OpStore %13 %19
-%27 = OpLoad  %3  %13
-%28 = OpLogicalNotEqual  %3  %19 %27
-OpStore %16 %28
-%29 = OpLoad  %3  %16
-%30 = OpLogicalEqual  %3  %19 %29
-OpBranchConditional %30 %24 %23
-%24 = OpLabel
 OpReturn
 OpFunctionEnd
-%37 = OpFunction  %2  None %21
-%36 = OpFunctionParameter  %3
-%35 = OpLabel
-%31 = OpVariable  %14  Function %32
-%33 = OpVariable  %14  Function %34
-OpBranch %38
-%38 = OpLabel
-OpBranch %39
-%39 = OpLabel
-OpLoopMerge %40 %42 None
+%39 = OpFunction  %2  None %23
+%38 = OpFunctionParameter  %3
+%37 = OpLabel
+%33 = OpVariable  %16  Function %34
+%35 = OpVariable  %16  Function %36
+OpBranch %40
+%40 = OpLabel
 OpBranch %41
 %41 = OpLabel
-OpStore %31 %36
-%43 = OpLoad  %3  %31
-%44 = OpLogicalNotEqual  %3  %36 %43
-OpStore %33 %44
-OpBranch %42
-%42 = OpLabel
+OpLoopMerge %42 %44 None
+OpBranch %43
+%43 = OpLabel
+OpStore %33 %38
 %45 = OpLoad  %3  %33
-%46 = OpLogicalEqual  %3  %36 %45
-OpBranchConditional %46 %40 %39
-%40 = OpLabel
+%46 = OpLogicalNotEqual  %3  %38 %45
+OpStore %35 %46
+OpBranch %44
+%44 = OpLabel
+%47 = OpLoad  %3  %35
+%48 = OpLogicalEqual  %3  %38 %47
+OpBranchConditional %48 %42 %41
+%42 = OpLabel
 OpReturn
 OpFunctionEnd
-%48 = OpFunction  %2  None %6
-%47 = OpLabel
-OpBranch %49
+%50 = OpFunction  %2  None %8
 %49 = OpLabel
+OpBranch %51
+%51 = OpLabel
 OpReturn
 OpFunctionEnd
