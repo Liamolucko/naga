@@ -637,7 +637,7 @@ impl Frontend {
             LocalVariable {
                 name: decl.name.clone(),
                 ty: decl.ty,
-                init: None,
+                init: decl.init,
             },
             decl.meta,
         );
